@@ -1,42 +1,125 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Top Bar */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: black;
+  height: 60px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.top-left {
+  display: flex;
+  align-items: center;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.spotify-logo {
+  height: 40px;
+  margin-left: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.top-center {
+  display: flex;
+  align-items: center;
 }
 
-.card {
-  padding: 2em;
+.home-button {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 16px;
+  margin-right: 20px;
+  cursor: pointer;
 }
 
-.read-the-docs {
-  color: #888;
+.search-bar {
+  width: 300px;
+  padding: 10px;
+  border-radius: 25px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.top-right .auth-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.signup-button,
+.login-button {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.signup-button:hover,
+.login-button:hover {
+  color: #1DB954;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 20%;
+  background-color: #2e2e2e;
+  height: calc(100vh - 60px); /* Adjust for the top bar height */
+  border-top-right-radius: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  color: white;
+  position: relative;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+}
+
+/* Main Content */
+.main-content {
+  width: 75%;
+  padding: 20px;
+  overflow-y: auto;
+  color: white;
+}
+
+.content-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.content-item {
+  background-color: #3e3e3e;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Footer / Bottom Player */
+.bottom-player {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #181818;
+  height: 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.queue-and-volume {
+  display: flex;
+  gap: 10px;
 }
