@@ -90,27 +90,6 @@ function App() {
                 )}
             </div>
 
-            {/* Main Content */}
-            <div className="main-content">
-                <h2>Popular Artists</h2>
-                <div className="content-row">
-                    {/* Simulate popular artists (could be fetched from API) */}
-                    <div className="content-item">Artist 1</div>
-                    <div className="content-item">Artist 2</div>
-                    <div className="content-item">Artist 3</div>
-                    <div className="content-item">Artist 4</div>
-                    <div className="content-item">Artist 5</div>
-                    <div className="content-item">Artist 6</div>
-                </div>
-                <h2>Popular Albums</h2>
-                <div className="content-row">
-                    <div className="content-item">Album 1</div>
-                    <div className="content-item">Album 2</div>
-                    <div className="content-item">Album 3</div>
-                </div>
-                {/* Add more sections for radio, featured charts, etc. */}
-            </div>
-
             {/* Footer (bottom bar for music player) */}
             {isLoggedIn && currentTrack && (
                 <div className="bottom-player">
