@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { loginUrl } from './spotifyAuth';
 import './App.css'; // Assuming you have this file for styling
+import SerialDataComponent from './SerialDataComponent'; // Importing the new Serial Data component
 
 function App() {
+    // Spotify-related state variables
     const [token, setToken] = useState<string | null>(null);
     const [player, setPlayer] = useState<any>(null);
     const [isPaused, setIsPaused] = useState(true);
@@ -31,7 +33,6 @@ function App() {
     useEffect(() => {
         const hash = window.location.hash;
         let _token = window.localStorage.getItem('spotify_token');
-
         if (!_token && hash) {
             _token = new URLSearchParams(hash.substring(1)).get('access_token');
             window.location.hash = '';
@@ -42,7 +43,6 @@ function App() {
         } else {
             setToken(_token);
         }
-
         setIsLoggedIn(!!_token);
     }, []);
 
@@ -117,7 +117,6 @@ function App() {
                 });
 
                 player.on('ready', ({ device_id }: any) => {
-                    console.log('Player is ready with device ID', device_id);
                     setDeviceId(device_id);
                     transferPlaybackToDevice(device_id); // Transfer playback to Web Player
                 });
@@ -146,8 +145,6 @@ function App() {
     const handlePlayPlaylist = () => {
         if (playlistTracks.length > 0 && deviceId && token) {
             const uris = playlistTracks.map((track: any) => track.track.uri);
-
-            // Ensure playback is transferred to the web player device and start playback
             axios.put(
                 `https://api.spotify.com/v1/me/player/play`,
                 {
@@ -164,24 +161,6 @@ function App() {
                 .catch((error) => console.error('Error starting playback:', error));
         }
     };
-
-    // Check active device and ensure it's the web player
-    useEffect(() => {
-        if (token && deviceId) {
-            axios
-                .get('https://api.spotify.com/v1/me/player', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-                .then((response) => {
-                    if (response.data.device.id !== deviceId) {
-                        transferPlaybackToDevice(deviceId); // Make sure Web Player is the active device
-                    }
-                })
-                .catch((error) => console.error('Error checking active device:', error));
-        }
-    }, [deviceId, token]);
 
     return (
         <div className="spotify-layout">
@@ -245,6 +224,9 @@ function App() {
                 )}
             </div>
 
+            {/* Arduino Serial Data Component */}
+            <SerialDataComponent />
+
             {/* Footer (bottom bar for music player) */}
             {isLoggedIn && currentTrack && (
                 <div className="bottom-player">
@@ -268,4 +250,7 @@ function App() {
 }
 
 export default App;
+
+
+
 
