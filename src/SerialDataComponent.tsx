@@ -7,13 +7,13 @@ const SerialDataComponent: React.FC = () => {
     const [heartbeatDetected, setHeartbeatDetected] = useState<boolean | null>(null);
     const [port, setPort] = useState<any | null>(null);
     const [reader, setReader] = useState<any | null>(null);
-    const [incomingData, setIncomingData] = useState<string>(''); // Buffer for accumulating chunks
+    const [buffer, setBuffer] = useState<string>(''); // Buffer for accumulating chunks
 
     // Function to connect to the Arduino's serial port
     const connectToSerial = async () => {
         try {
             const port = await navigator.serial.requestPort();
-            await port.open({ baudRate: 9600 }); // Consider increasing baudRate if needed
+            await port.open({ baudRate: 9600 });
             const textDecoder = new TextDecoderStream();
             const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
             const reader = textDecoder.readable.getReader();
@@ -22,6 +22,16 @@ const SerialDataComponent: React.FC = () => {
             console.log('Connected to serial port');
         } catch (error) {
             console.error('Failed to connect to serial port:', error);
+        }
+    };
+
+    // Validate if a string is valid JSON
+    const isValidJSON = (str: string) => {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (e) {
+            return false;
         }
     };
 
@@ -36,37 +46,35 @@ const SerialDataComponent: React.FC = () => {
                     }
 
                     if (value) {
-                        // Append incoming data chunk to the buffer
-                        const newData = incomingData + value;
-                        setIncomingData(newData);
+                        // Accumulate incoming data in the buffer
+                        let newBuffer = buffer + value;
 
-                        // Check if we have a complete JSON object (e.g., ending with `}`)
-                        const jsonObjects = newData.split('}'); // Split by closing brace to detect complete JSON objects
+                        // Split buffer into potential JSON objects using newline '\n'
+                        const parts = newBuffer.split('\n');
 
-                        jsonObjects.forEach((jsonObject, index) => {
-                            if (jsonObject.trim() === '') return; // Skip empty strings
+                        parts.forEach((part, index) => {
+                            if (part.trim() === '') return; // Skip empty parts
 
-                            if (jsonObject.includes('{') && index < jsonObjects.length - 1) {
-                                // Add the closing brace back and try parsing
-                                const completeJSON = jsonObject.trim() + '}';
+                            // Check for complete JSON and parse only valid JSON objects
+                            if (isValidJSON(part.trim())) {
                                 try {
-                                    const parsedData = JSON.parse(completeJSON);
-                                    setGsrData(parsedData.GSR);
-                                    setPulseData(parsedData.Pulse);
-                                    setBpmData(parsedData.BPM);
-                                    setHeartbeatDetected(parsedData.Heartbeat);
-                                    console.log('Extracted JSON:', parsedData);
+                                    const jsonData = JSON.parse(part.trim());
+                                    setGsrData(jsonData.GSR);
+                                    setPulseData(jsonData.Pulse);
+                                    setBpmData(jsonData.BPM);
+                                    setHeartbeatDetected(jsonData.Heartbeat);
+                                    console.log('Extracted JSON:', jsonData);
                                 } catch (error) {
-                                    console.error('Failed to parse JSON:', error);
+                                    console.error('Failed to parse JSON:', error, 'Line:', part.trim());
                                 }
+                            } else {
+                                console.warn('Invalid JSON skipped:', part.trim());
                             }
                         });
 
-                        // Update buffer with any remaining data that wasn't fully parsed
-                        const remainingData = jsonObjects[jsonObjects.length - 1].includes('{')
-                            ? jsonObjects[jsonObjects.length - 1]
-                            : '';
-                        setIncomingData(remainingData);
+                        // Keep the remaining unprocessed data in the buffer
+                        newBuffer = parts[parts.length - 1].includes('{') ? parts[parts.length - 1] : '';
+                        setBuffer(newBuffer);
                     }
                 } catch (error) {
                     console.error('Error reading from serial port:', error);
@@ -77,7 +85,7 @@ const SerialDataComponent: React.FC = () => {
         if (reader) {
             readSerialData();
         }
-    }, [reader, incomingData]);
+    }, [reader, buffer]);
 
     return (
         <div style={{ position: 'relative', zIndex: 10, padding: '20px' }}>
