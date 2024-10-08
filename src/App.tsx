@@ -8,7 +8,7 @@ function App() {
     // Spotify-related state variables
     const [token, setToken] = useState<string | null>(null);
     const [player, setPlayer] = useState<any>(null);
-    const [isPaused, setIsPaused] = useState(true);
+    const [isPaused, setIsPaused] = useState(true); // Local state to track play/pause
     const [currentTrack, setCurrentTrack] = useState<any>(null);
     const [userData, setUserData] = useState<any>(null);
     const [playlists, setPlaylists] = useState<any[]>([]);
@@ -110,34 +110,77 @@ function App() {
                     volume: 0.5,
                 });
 
+                // Player state change listener
                 player.on('player_state_changed', (state: any) => {
                     if (!state) return;
                     setCurrentTrack(state.track_window.current_track);
                     setIsPaused(state.paused);
+                    console.log('Player state changed:', state);
                 });
 
+                // Player ready event
                 player.on('ready', ({ device_id }: any) => {
                     setDeviceId(device_id);
                     transferPlaybackToDevice(device_id); // Transfer playback to Web Player
+                    console.log('Player is ready with device ID', device_id);
                 });
 
+                // Handle player errors
+                player.on('initialization_error', ({ message }: any) => {
+                    console.error('Failed to initialize player:', message);
+                });
+                player.on('authentication_error', ({ message }: any) => {
+                    console.error('Spotify authentication error:', message);
+                });
+                player.on('account_error', ({ message }: any) => {
+                    console.error('Spotify account error:', message);
+                });
+                player.on('playback_error', ({ message }: any) => {
+                    console.error('Playback error:', message);
+                });
+
+                // Connect the player
                 player.connect().then((success: boolean) => {
-                    if (success) console.log('Web Playback SDK connected to Spotify');
+                    if (success) {
+                        console.log('Web Playback SDK connected to Spotify');
+                        setPlayer(player); // Save player instance
+                    } else {
+                        console.error('Failed to connect player to Spotify');
+                    }
+                }).catch((err: any) => {
+                    console.error('Error connecting to Spotify Web Playback SDK:', err);
                 });
-
-                setPlayer(player);
             };
         }
     }, [token]);
 
-    // Function to handle play/pause functionality
-    const handlePlayPause = () => {
-        if (player) {
-            if (isPaused) {
-                player.resume().then(() => setIsPaused(false));
-            } else {
-                player.pause().then(() => setIsPaused(true));
+    // Function to handle play/pause functionality with error handling
+    const handlePlayPause = async () => {
+        if (!player) {
+            console.error('Spotify player is not initialized.');
+            return;
+        }
+
+        try {
+            // Check if the player is ready before calling getCurrentState
+            const playerState = await player.getCurrentState();
+
+            if (!playerState) {
+                console.error('Spotify player is not connected.');
+                return;
             }
+
+            if (isPaused) {
+                await player.resume();
+                setIsPaused(false);
+                console.log('Playback resumed');
+            } else {
+                await player.pause();
+                setIsPaused(true);
+                console.log('Playback paused');
+            }
+        } catch (error) {
+            console.error('Error controlling playback:', error);
         }
     };
 
@@ -250,7 +293,5 @@ function App() {
 }
 
 export default App;
-
-
 
 
