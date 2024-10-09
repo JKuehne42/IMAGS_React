@@ -1,210 +1,222 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { loginUrl } from './spotifyAuth';
 import './App.css'; // Assuming you have this file for styling
-import SerialDataComponent from './SerialDataComponent'; // Importing the new Serial Data component
+import SerialDataComponent from './SerialDataComponent'; // Importing the Arduino GSR component
+
+// Configuration for Spotify authentication
+const CLIENT_ID = '50f7cd52f2f2430d9aa8b5afb016d21c'; // Your Spotify client ID
+const REDIRECT_URI = 'http://localhost:5173/callback'; // Your app's redirect URI
+const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
+const SCOPES = [
+    'user-read-private',
+    'user-read-email',
+    'user-read-playback-state',
+    'user-modify-playback-state',
+    'streaming', // Required for Web Playback SDK
+].join('%20');
+
+// Build the Spotify login URL
+const loginUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES}`;
 
 function App() {
-    // Spotify-related state variables
     const [token, setToken] = useState<string | null>(null);
     const [player, setPlayer] = useState<any>(null);
-    const [isPaused, setIsPaused] = useState(true); // Local state to track play/pause
+    const [deviceId, setDeviceId] = useState<string | null>(null); // Track the device ID
+    const [isPaused, setIsPaused] = useState(true);
+    const [isPlayerConnected, setIsPlayerConnected] = useState(false); // Track player connection status
     const [currentTrack, setCurrentTrack] = useState<any>(null);
     const [userData, setUserData] = useState<any>(null);
     const [playlists, setPlaylists] = useState<any[]>([]);
-    const [deviceId, setDeviceId] = useState<string | null>(null);
     const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
     const [playlistTracks, setPlaylistTracks] = useState<any[]>([]);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Dynamically load Spotify Web Playback SDK
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://sdk.scdn.co/spotify-player.js';
-        script.async = true;
-        document.body.appendChild(script);
-
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
-
-    // Token retrieval and simulated login handling
+    // Get the Spotify access token from the URL after login
     useEffect(() => {
         const hash = window.location.hash;
-        let _token = window.localStorage.getItem('spotify_token');
-        if (!_token && hash) {
-            _token = new URLSearchParams(hash.substring(1)).get('access_token');
-            window.location.hash = '';
-            if (_token) {
-                window.localStorage.setItem('spotify_token', _token);
-                setToken(_token);
+        let token = window.localStorage.getItem('spotify_token');
+
+        if (!token && hash) {
+            token = new URLSearchParams(hash.substring(1)).get('access_token');
+            if (token) {
+                window.localStorage.setItem('spotify_token', token);
+                setToken(token);
             }
+            window.location.hash = ''; // Clean up the URL
         } else {
-            setToken(_token);
+            setToken(token);
         }
-        setIsLoggedIn(!!_token);
     }, []);
 
-    // Fetch Spotify user data and playlists
+    // Fetch user data and playlists
     useEffect(() => {
         if (token) {
-            axios
-                .get('https://api.spotify.com/v1/me', {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
+            axios.get('https://api.spotify.com/v1/me', { headers: { Authorization: `Bearer ${token}` } })
                 .then((response) => setUserData(response.data))
                 .catch((error) => console.error('Error fetching user data:', error));
 
-            axios
-                .get('https://api.spotify.com/v1/me/playlists', {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
+            axios.get('https://api.spotify.com/v1/me/playlists', { headers: { Authorization: `Bearer ${token}` } })
                 .then((response) => setPlaylists(response.data.items))
                 .catch((error) => console.error('Error fetching playlists:', error));
         }
     }, [token]);
 
-    // Fetch tracks for the selected playlist
-    useEffect(() => {
-        if (selectedPlaylist && token) {
-            axios
-                .get(`https://api.spotify.com/v1/playlists/${selectedPlaylist.id}/tracks`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                .then((response) => setPlaylistTracks(response.data.items))
-                .catch((error) => console.error('Error fetching playlist tracks:', error));
-        }
-    }, [selectedPlaylist, token]);
-
-    // Transfer playback to the correct device
-    const transferPlaybackToDevice = (device_id: string) => {
-        if (token && device_id) {
-            axios
-                .put(
-                    'https://api.spotify.com/v1/me/player',
-                    {
-                        device_ids: [device_id],
-                        play: true,
-                    },
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
-                )
-                .then(() => {
-                    console.log(`Transferred playback to device ${device_id}`);
-                })
-                .catch((error) => {
-                    console.error('Error transferring playback:', error);
-                });
-        }
-    };
-
-    // Initialize Spotify Web Playback SDK and transfer playback to this device
+    // Load the Spotify Web Playback SDK and initialize the player
     useEffect(() => {
         if (token) {
+            const script = document.createElement('script');
+            script.src = 'https://sdk.scdn.co/spotify-player.js';
+            script.async = true;
+            document.body.appendChild(script);
+
             window.onSpotifyWebPlaybackSDKReady = () => {
                 const player = new window.Spotify.Player({
                     name: 'React Web Player',
-                    getOAuthToken: (cb: any) => cb(token),
-                    volume: 0.5,
+                    getOAuthToken: (cb: any) => { cb(token); },
+                    volume: 0.5
                 });
 
-                // Player state change listener
-                player.on('player_state_changed', (state: any) => {
+                // Error handling
+                player.addListener('initialization_error', ({ message }: any) => { console.error('Initialization error:', message); });
+                player.addListener('authentication_error', ({ message }: any) => { console.error('Authentication error:', message); });
+                player.addListener('account_error', ({ message }: any) => { console.error('Account error:', message); });
+                player.addListener('playback_error', ({ message }: any) => { console.error('Playback error:', message); });
+
+                // Playback status updates
+                player.addListener('player_state_changed', (state: any) => {
                     if (!state) return;
                     setCurrentTrack(state.track_window.current_track);
                     setIsPaused(state.paused);
-                    console.log('Player state changed:', state);
                 });
 
-                // Player ready event
-                player.on('ready', ({ device_id }: any) => {
+                // Player is ready
+                player.addListener('ready', async ({ device_id }: any) => {
+                    console.log('Player is ready with Device ID:', device_id);
                     setDeviceId(device_id);
-                    transferPlaybackToDevice(device_id); // Transfer playback to Web Player
-                    console.log('Player is ready with device ID', device_id);
+                    setIsPlayerConnected(true); // Mark player as connected
+
+                    // Transfer playback to the Web Player
+                    await transferPlaybackToDevice(device_id);
                 });
 
-                // Handle player errors
-                player.on('initialization_error', ({ message }: any) => {
-                    console.error('Failed to initialize player:', message);
-                });
-                player.on('authentication_error', ({ message }: any) => {
-                    console.error('Spotify authentication error:', message);
-                });
-                player.on('account_error', ({ message }: any) => {
-                    console.error('Spotify account error:', message);
-                });
-                player.on('playback_error', ({ message }: any) => {
-                    console.error('Playback error:', message);
+                // Player not ready (disconnected)
+                player.addListener('not_ready', ({ device_id }: any) => {
+                    console.error('Player has disconnected, Device ID:', device_id);
+                    setIsPlayerConnected(false); // Mark player as disconnected
                 });
 
                 // Connect the player
                 player.connect().then((success: boolean) => {
                     if (success) {
-                        console.log('Web Playback SDK connected to Spotify');
+                        console.log('Spotify Player successfully connected.');
                         setPlayer(player); // Save player instance
                     } else {
-                        console.error('Failed to connect player to Spotify');
+                        console.error('Failed to connect Spotify Player.');
                     }
-                }).catch((err: any) => {
-                    console.error('Error connecting to Spotify Web Playback SDK:', err);
                 });
+            };
+
+            return () => {
+                document.body.removeChild(script);
             };
         }
     }, [token]);
 
-    // Function to handle play/pause functionality with error handling
+    // Transfer playback to the Web Player device
+    const transferPlaybackToDevice = async (device_id: string) => {
+        if (!token) return;
+
+        try {
+            await axios({
+                method: 'PUT',
+                url: 'https://api.spotify.com/v1/me/player',
+                data: {
+                    device_ids: [device_id],
+                    play: false, // Don't auto-start playback
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log(`Playback transferred to device ${device_id}`);
+        } catch (error) {
+            console.error('Error transferring playback:', error);
+        }
+    };
+
+    // Handle play/pause toggle
     const handlePlayPause = async () => {
         if (!player) {
-            console.error('Spotify player is not initialized.');
+            console.error('Player is not initialized.');
             return;
         }
 
-        try {
-            // Check if the player is ready before calling getCurrentState
-            const playerState = await player.getCurrentState();
-
-            if (!playerState) {
-                console.error('Spotify player is not connected.');
-                return;
-            }
-
-            if (isPaused) {
-                await player.resume();
-                setIsPaused(false);
-                console.log('Playback resumed');
-            } else {
-                await player.pause();
-                setIsPaused(true);
-                console.log('Playback paused');
-            }
-        } catch (error) {
-            console.error('Error controlling playback:', error);
+        if (!isPlayerConnected) {
+            console.error('Player is not connected.');
+            return;
         }
+
+        const state = await player.getCurrentState();
+
+        if (!state) {
+            console.error('Player is not connected to a device.');
+            return;
+        }
+
+        if (state.paused) {
+            await player.resume();
+        } else {
+            await player.pause();
+        }
+
+        setIsPaused(!state.paused);
     };
 
-    // Function to play the selected playlist
-    const handlePlayPlaylist = () => {
+    // Fetch playlist tracks when a playlist is selected
+    useEffect(() => {
+        if (selectedPlaylist && token) {
+            axios.get(`https://api.spotify.com/v1/playlists/${selectedPlaylist.id}/tracks`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+                .then((response) => setPlaylistTracks(response.data.items))
+                .catch((error) => console.error('Error fetching playlist tracks:', error));
+        }
+    }, [selectedPlaylist, token]);
+
+    // Play the selected playlist
+    const handlePlayPlaylist = async () => {
         if (playlistTracks.length > 0 && deviceId && token) {
             const uris = playlistTracks.map((track: any) => track.track.uri);
-            axios.put(
-                `https://api.spotify.com/v1/me/player/play`,
-                {
-                    uris: [uris[0]], // Modify to play the whole playlist
-                    device_id: deviceId, // Ensure playback happens on the Web Player
-                },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            )
-                .then(() => {
-                    console.log('Playback started on Web Player');
-                })
-                .catch((error) => console.error('Error starting playback:', error));
+            try {
+                await axios.put(
+                    `https://api.spotify.com/v1/me/player/play`,
+                    {
+                        uris: uris,
+                        device_id: deviceId,
+                    },
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                console.log('Playlist started');
+            } catch (error) {
+                console.error('Error starting playlist:', error);
+            }
+        } else {
+            console.error('No playlist selected or no tracks available.');
         }
     };
 
+    // If no token, show login button
+    if (!token) {
+        return (
+            <div>
+                <h1>Login to Spotify</h1>
+                <a href={loginUrl}>Login with Spotify</a>
+            </div>
+        );
+    }
+
+    // If authenticated, render the UI
     return (
         <div className="spotify-layout">
             {/* Top Bar */}
@@ -217,21 +229,14 @@ function App() {
                     <input type="text" className="search-bar" placeholder="What do you want to play?" />
                 </div>
                 <div className="top-right">
-                    {!isLoggedIn ? (
-                        <div className="auth-buttons">
-                            <a href={loginUrl} className="signup-button">Sign up</a>
-                            <a href={loginUrl} className="login-button">Log in</a>
-                        </div>
-                    ) : (
-                        <p>{userData?.display_name}</p>
-                    )}
+                    {userData && <p>{userData.display_name}</p>}
                 </div>
             </div>
 
             {/* Sidebar */}
             <div className="sidebar">
                 <h2>Your Library</h2>
-                {isLoggedIn && playlists.length > 0 && (
+                {playlists.length > 0 && (
                     <div className="playlists">
                         <h3>Your Playlists</h3>
                         <ul>
@@ -259,39 +264,26 @@ function App() {
                     <div>
                         <h2>Now Playing</h2>
                         <p>{currentTrack.name} by {currentTrack.artists.map((artist: any) => artist.name).join(', ')}</p>
-                        <img src={currentTrack.album.images[0].url} alt="Album Art" width={100} />
-                        <button onClick={handlePlayPause}>
-                            {isPaused ? 'Play' : 'Pause'}
-                        </button>
+                        <img src={currentTrack.album.images[0]?.url} alt="Album Art" width={100} />
                     </div>
                 )}
             </div>
 
-            {/* Arduino Serial Data Component */}
-            <SerialDataComponent />
-
-            {/* Footer (bottom bar for music player) */}
-            {isLoggedIn && currentTrack && (
+            {/* Footer (Bottom Player Controls) */}
+            {currentTrack && (
                 <div className="bottom-player">
                     <div className="controls">
-                        <button>Shuffle</button>
-                        <button>Previous</button>
                         <button onClick={handlePlayPause}>{isPaused ? 'Play' : 'Pause'}</button>
+                        <button>Previous</button>
                         <button>Next</button>
-                        <button>Repeat</button>
-                    </div>
-                    <div className="queue-and-volume">
-                        <button>Queue</button>
-                        <button>Connect to Device</button>
-                        <button>Volume</button>
-                        <button>Fullscreen</button>
                     </div>
                 </div>
             )}
+
+            {/* Arduino Serial Data Component */}
+            <SerialDataComponent />
         </div>
     );
 }
 
 export default App;
-
-
