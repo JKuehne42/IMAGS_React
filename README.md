@@ -13,6 +13,7 @@ The IMAGS system consists of two main components:
 - Software: A web application that allows researchers to track and analyze patients' music selections alongside physiological data, such as pain ratings.
 - Hardware: A Galvanic Skin Response (GSR) sensor integrated with a Beats Per Minute (BPM) sensor to collect data on users' physiological responses while listening to music.
 Together, these components help identify what types of music could potentially supplement or replace opioid pain relief.
+
 Visit the IMAGS GitHub repository for more details on the software: https://github.com/EAMIRorg/IMAGS_React
 # Galvanic Skin Response (GSR) Hardware
 A separate repository for building the Arduino-based GSR sensor for use with the IMAGS platform is available here: https://github.com/EAMIRorg/GSR
