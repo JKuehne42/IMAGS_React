@@ -25,66 +25,67 @@ const SerialDataComponent: React.FC = () => {
         }
     };
 
-    // Validate if a string is valid JSON
-    const isValidJSON = (str: string) => {
-        try {
-            JSON.parse(str);
-            return true;
-        } catch (e) {
-            return false;
+    // Function to process the buffered data and extract complete JSON objects
+    const processBuffer = (data: string) => {
+        let start = data.indexOf('{');
+        let end = data.indexOf('}');
+
+        while (start !== -1 && end !== -1 && end > start) {
+            const jsonString = data.substring(start, end + 1);
+
+            try {
+                const jsonData = JSON.parse(jsonString);
+                setGsrData(jsonData.GSR);
+                setPulseData(jsonData.Pulse);
+                setBpmData(jsonData.BPM);
+                setHeartbeatDetected(jsonData.Heartbeat);
+                console.log('Extracted JSON:', jsonData);
+            } catch (error) {
+                console.error('Failed to parse JSON:', jsonString, error);
+            }
+
+            // Remove the processed JSON from buffer
+            data = data.substring(end + 1);
+            start = data.indexOf('{');
+            end = data.indexOf('}');
         }
+
+        return data; // Return remaining buffer (incomplete data)
     };
 
+    // Asynchronous serial data reader using setInterval to avoid stalling the main thread
     useEffect(() => {
+        let intervalId: any;
+
         const readSerialData = async () => {
-            while (reader) {
-                try {
-                    const { value, done } = await reader.read();
-                    if (done) {
-                        reader.releaseLock();
-                        return;
-                    }
+            if (!reader) return;
 
-                    if (value) {
-                        // Accumulate incoming data in the buffer
-                        let newBuffer = buffer + value;
-
-                        // Split buffer into potential JSON objects using newline '\n'
-                        const parts = newBuffer.split('\n');
-
-                        parts.forEach((part, index) => {
-                            if (part.trim() === '') return; // Skip empty parts
-
-                            // Check for complete JSON and parse only valid JSON objects
-                            if (isValidJSON(part.trim())) {
-                                try {
-                                    const jsonData = JSON.parse(part.trim());
-                                    setGsrData(jsonData.GSR);
-                                    setPulseData(jsonData.Pulse);
-                                    setBpmData(jsonData.BPM);
-                                    setHeartbeatDetected(jsonData.Heartbeat);
-                                    console.log('Extracted JSON:', jsonData);
-                                } catch (error) {
-                                    console.error('Failed to parse JSON:', error, 'Line:', part.trim());
-                                }
-                            } else {
-                                console.warn('Invalid JSON skipped:', part.trim());
-                            }
-                        });
-
-                        // Keep the remaining unprocessed data in the buffer
-                        newBuffer = parts[parts.length - 1].includes('{') ? parts[parts.length - 1] : '';
-                        setBuffer(newBuffer);
-                    }
-                } catch (error) {
-                    console.error('Error reading from serial port:', error);
+            try {
+                const { value, done } = await reader.read();
+                if (done) {
+                    reader.releaseLock();
+                    return;
                 }
+
+                if (value) {
+                    // Append incoming data to buffer and process it
+                    const newBuffer = buffer + value;
+                    const remainingBuffer = processBuffer(newBuffer);
+                    setBuffer(remainingBuffer);
+                }
+            } catch (error) {
+                console.error('Error reading from serial port:', error);
             }
         };
 
         if (reader) {
-            readSerialData();
+            // Use setInterval to repeatedly check for new data every 100ms
+            intervalId = setInterval(readSerialData, 100);
         }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
     }, [reader, buffer]);
 
     return (
@@ -115,3 +116,4 @@ const SerialDataComponent: React.FC = () => {
 };
 
 export default SerialDataComponent;
+
