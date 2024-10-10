@@ -1,42 +1,165 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Global Styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #121212;
+  color: white;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Spotify Layout */
+.spotify-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw; /* Ensure layout takes full width and height */
+  overflow: hidden;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Top Bar */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: black;
+  height: 60px;
+  width: 100%; /* Full width */
+  box-sizing: border-box;
+}
+
+.top-left {
+  display: flex;
+  align-items: center;
+}
+
+.spotify-logo {
+  height: 40px;
+}
+
+.top-center {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center; /* Center home button and search bar */
+}
+
+.home-button {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 16px;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 600px; /* Responsive max width for search bar */
+  padding: 10px;
+  border-radius: 25px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 20%; /* Responsive fixed width */
+  background-color: #2e2e2e;
+  height: calc(100vh - 60px); /* Full height minus the top bar */
+  padding: 20px;
+  box-sizing: border-box;
+  color: white;
+  position: fixed;
+  top: 60px; /* Start right below the top bar */
+  left: 0;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+}
+
+.playlists ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.playlists li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.playlist-image {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+  border-radius: 4px;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 20%; /* Account for sidebar width */
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 60px); /* Full height minus the top bar */
+  box-sizing: border-box;
+  width: 80%; /* Remaining width for content */
+}
+
+/* Bottom Player */
+.bottom-player {
+  position: fixed;
+  bottom: 0;
+  width: calc(100% - 20%); /* Full width minus sidebar */
+  background-color: #181818;
+  height: 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  left: 20%; /* Aligned with the main content */
+  z-index: 100; /* Make sure it's on top */
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.queue-and-volume {
+  display: flex;
+  gap: 10px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
   }
-  to {
-    transform: rotate(360deg);
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .bottom-player {
+    width: 100%;
+    left: 0;
   }
-}
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
