@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css'; // Assuming you have this file for styling
 import SerialDataComponent from './SerialDataComponent'; // Importing the Arduino GSR component
 
 // Configuration for Spotify authentication
-const CLIENT_ID = '50f7cd52f2f2430d9aa8b5afb016d21c'; // Your Spotify client ID
+const CLIENT_ID = 'bad35e9a5e774d3584043c601889c7ec'; // Your Spotify client ID
 const REDIRECT_URI = 'http://localhost:5173/callback'; // Your app's redirect URI
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 const SCOPES = [
@@ -12,6 +13,8 @@ const SCOPES = [
     'user-read-email',
     'user-read-playback-state',
     'user-modify-playback-state',
+    'playlist-read-private',
+    'playlist-read-collaborative',
     'streaming', // Required for Web Playback SDK
 ].join('%20');
 
@@ -32,18 +35,13 @@ function App() {
 
     // Get the Spotify access token from the URL after login
     useEffect(() => {
-        const hash = window.location.hash;
-        let token = window.localStorage.getItem('spotify_token');
-
-        if (!token && hash) {
-            token = new URLSearchParams(hash.substring(1)).get('access_token');
-            if (token) {
-                window.localStorage.setItem('spotify_token', token);
-                setToken(token);
-            }
-            window.location.hash = ''; // Clean up the URL
-        } else {
-            setToken(token);
+        let urlReturnedToken = null; //assume the url hasn't returned a token (until we find it)
+        let hash = window.location.hash; //does the URL have any hash info (where we would find the token)?
+        if(hash) {
+            urlReturnedToken = new URLSearchParams(hash.substring(1)).get('access_token'); //find the token within the url
+        }
+        if(urlReturnedToken){
+            setToken(urlReturnedToken);
         }
     }, []);
 
@@ -54,7 +52,7 @@ function App() {
                 .then((response) => setUserData(response.data))
                 .catch((error) => console.error('Error fetching user data:', error));
 
-            axios.get('https://api.spotify.com/v1/me/playlists', { headers: { Authorization: `Bearer ${token}` } })
+            axios.get('https://api.spotify.com/v1/me/playlists?limit=20', { headers: { Authorization: `Bearer ${token}` } })
                 .then((response) => setPlaylists(response.data.items))
                 .catch((error) => console.error('Error fetching playlists:', error));
         }
@@ -242,7 +240,7 @@ function App() {
                         <ul>
                             {playlists.map((playlist) => (
                                 <li key={playlist.id} onClick={() => setSelectedPlaylist(playlist)}>
-                                    <img src={playlist.images[0]?.url} alt={playlist.name} className="playlist-image" />
+                                    <img width="300" height="300" src={playlist.images[0]?.url} alt={playlist.name} className="playlist-image" />
                                     {playlist.name}
                                 </li>
                             ))}
