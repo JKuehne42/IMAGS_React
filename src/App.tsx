@@ -5,7 +5,7 @@ import './App.css'; // Assuming you have this file for styling
 import SerialDataComponent from './SerialDataComponent'; // Importing the Arduino GSR component
 
 // Configuration for Spotify authentication
-const CLIENT_ID = 'bad35e9a5e774d3584043c601889c7ec'; // Your Spotify client ID
+const CLIENT_ID = 'bad35e9a5e774d3584043c601889c7ec'; // Your Spotify client ID //TODO: change this to be variable
 const REDIRECT_URI = 'http://localhost:5173/callback'; // Your app's redirect URI
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 const SCOPES = [
@@ -169,6 +169,48 @@ function App() {
         setIsPaused(!state.paused);
     };
 
+    const handlePrevious = async () => {
+        if (!player) {
+            console.error('Player is not initialized.');
+            return;
+        }
+
+        if (!isPlayerConnected) {
+            console.error('Player is not connected.');
+            return;
+        }
+
+        const state = await player.getCurrentState();
+
+        if (!state) {
+            console.error('Player is not connected to a device.');
+            return;
+        }
+
+        await player.previousTrack();
+    };
+
+    const handleNext = async () => {
+        if (!player) {
+            console.error('Player is not initialized.');
+            return;
+        }
+
+        if (!isPlayerConnected) {
+            console.error('Player is not connected.');
+            return;
+        }
+
+        const state = await player.getCurrentState();
+
+        if (!state) {
+            console.error('Player is not connected to a device.');
+            return;
+        }
+
+        await player.nextTrack();
+    };
+
     // Fetch playlist tracks when a playlist is selected
     useEffect(() => {
         if (selectedPlaylist && token) {
@@ -272,8 +314,8 @@ function App() {
                 <div className="bottom-player">
                     <div className="controls">
                         <button onClick={handlePlayPause}>{isPaused ? 'Play' : 'Pause'}</button>
-                        <button>Previous</button>
-                        <button>Next</button>
+                        <button onClick={handlePrevious}>Previous</button>
+                        <button onClick={handleNext}>Next</button>
                     </div>
                 </div>
             )}
