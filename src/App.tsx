@@ -5,7 +5,7 @@ import './App.css'; // Assuming you have this file for styling
 import SerialDataComponent from './SerialDataComponent'; // Importing the Arduino GSR component
 
 // Configuration for Spotify authentication
-const CLIENT_ID = 'bad35e9a5e774d3584043c601889c7ec'; // Your Spotify client ID //TODO: change this to be variable
+const CLIENT_ID = 'bad35e9a5e774d3584043c601889c7ec'; // Your Spotify client ID 
 const REDIRECT_URI = 'http://localhost:5173/callback'; // Your app's redirect URI
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 const SCOPES = [
@@ -19,7 +19,7 @@ const SCOPES = [
 ].join('%20');
 
 // Build the Spotify login URL
-const loginUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPES}`;
+const loginUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&show_dialog=true&scope=${SCOPES}`;
 
 function App() {
     const [token, setToken] = useState<string | null>(null);
@@ -52,7 +52,7 @@ function App() {
                 .then((response) => setUserData(response.data))
                 .catch((error) => console.error('Error fetching user data:', error));
 
-            axios.get('https://api.spotify.com/v1/me/playlists?limit=20', { headers: { Authorization: `Bearer ${token}` } })
+            axios.get('https://api.spotify.com/v1/me/playlists?limit=10', { headers: { Authorization: `Bearer ${token}` } })
                 .then((response) => setPlaylists(response.data.items))
                 .catch((error) => console.error('Error fetching playlists:', error));
         }
