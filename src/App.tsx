@@ -32,6 +32,7 @@ function App() {
     const [playlists, setPlaylists] = useState<any[]>([]);
     const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
     const [playlistTracks, setPlaylistTracks] = useState<any[]>([]);
+    const [searchedTracks, setSearchedTracks] = useState<any[]>([]);
 
     // Get the Spotify access token from the URL after login
     useEffect(() => {
@@ -52,7 +53,7 @@ function App() {
                 .then((response) => setUserData(response.data))
                 .catch((error) => console.error('Error fetching user data:', error));
 
-            axios.get('https://api.spotify.com/v1/me/playlists?limit=10', { headers: { Authorization: `Bearer ${token}` } })
+            axios.get('https://api.spotify.com/v1/me/playlists?limit=7', { headers: { Authorization: `Bearer ${token}` } })
                 .then((response) => setPlaylists(response.data.items))
                 .catch((error) => console.error('Error fetching playlists:', error));
         }
@@ -256,6 +257,24 @@ function App() {
         }
     }
 
+    //search box handler function\
+    const searchBoxHandler = () => {
+        const searchBoxElement = document.getElementById("searchBoxText") as HTMLInputElement | null;
+        const currentSearchText = searchBoxElement ? searchBoxElement.value : '';
+        console.log(currentSearchText)
+
+        axios.get(`https://api.spotify.com/v1/search?q=${currentSearchText}&type=track&limit=1`, {
+            headers: { 
+                Authorization: `Bearer ${token}` 
+            }
+        })
+            .then((response) => setSearchedTracks(response.data))
+            .catch((error) => console.error('Error fetching searched tracks:', error));
+            console.log(searchedTracks)
+        //Use .map from playlists
+        //onClick of playlists, setCurrentTrack as is in line 30
+    }
+
     // If no token, show login button
     if (!token) {
         return (
@@ -276,7 +295,7 @@ function App() {
                 </div>
                 <div className="top-center">
                     <button className="home-button">Home</button>
-                    <input type="text" className="search-bar" placeholder="What do you want to play?" />
+                    <input id="searchBoxText" onChange={() => searchBoxHandler()} type="text" className="search-bar" placeholder="What do you want to play?" />
                 </div>
                 <div className="top-right">
                     {userData && <p>{userData.display_name}</p>}
