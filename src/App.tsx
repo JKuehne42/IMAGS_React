@@ -246,6 +246,16 @@ function App() {
         }
     };
 
+    //If the playlist fetched from the API has no image, use a default image (question mark icon)
+    const playlistImageUrlHandler = (playlist: any): string => {
+        if(playlist.images != null) {
+            return playlist.images[0]!.url
+        }
+        else {
+            return "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNdkNnSDVHSI8bYmY4EAtVBOeKyQBih6vuUg&s"
+        }
+    }
+
     // If no token, show login button
     if (!token) {
         return (
@@ -282,7 +292,7 @@ function App() {
                         <ul>
                             {playlists.map((playlist) => (
                                 <li key={playlist.id} onClick={() => setSelectedPlaylist(playlist)}>
-                                    <img width="300" height="300" src={playlist.images[0]?.url} alt={playlist.name} className="playlist-image" />
+                                    <img width="300" height="300" src={playlistImageUrlHandler(playlist)} alt={playlist.name} className="playlist-image" />
                                     {playlist.name}
                                 </li>
                             ))}
