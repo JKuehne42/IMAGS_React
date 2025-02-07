@@ -257,22 +257,23 @@ function App() {
         }
     }
 
-    //search box handler function\
+    //search box handler function, called on update of search box
     const searchBoxHandler = () => {
+        //Makes sure value is not null
         const searchBoxElement = document.getElementById("searchBoxText") as HTMLInputElement | null;
         const currentSearchText = searchBoxElement ? searchBoxElement.value : '';
         console.log(currentSearchText)
 
-        axios.get(`https://api.spotify.com/v1/search?q=${currentSearchText}&type=track&limit=1`, {
+        axios.get(`https://api.spotify.com/v1/search?q=${currentSearchText}&type=track&limit=5`, {
             headers: { 
                 Authorization: `Bearer ${token}` 
             }
         })
-            .then((response) => setSearchedTracks(response.data))
-            .catch((error) => console.error('Error fetching searched tracks:', error));
-            console.log(searchedTracks)
-        //Use .map from playlists
-        //onClick of playlists, setCurrentTrack as is in line 30
+        //Gets response from get request and stores array of tracks in searchedTracks variable
+        .then((response) => setSearchedTracks(response.data.tracks.items))
+        .catch((error) => console.error('Error fetching searched tracks:', error));
+        console.log(searchedTracks)
+        //Is then displayed in the Main Content portion of the UI for selecting
     }
 
     // If no token, show login button
@@ -334,6 +335,17 @@ function App() {
                         <h2>Now Playing</h2>
                         <p>{currentTrack.name} by {currentTrack.artists.map((artist: any) => artist.name).join(', ')}</p>
                         <img src={currentTrack.album.images[0]?.url} alt="Album Art" width={100} />
+                    </div>
+                )}
+                {searchedTracks.length > 0 && (
+                    <div>
+                        <h2>Searched Tracks</h2>
+                        {searchedTracks.slice(0, 5).map((track: any) => (
+                            <div key={track.id} onClick={() => setCurrentTrack(track)}>
+                                <p>{track.name} by {track.artists.map((artist: any) => artist.name).join(', ')}</p>
+                                <img src={track.album.images[0]?.url} alt="Album Art" width={50} />
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
