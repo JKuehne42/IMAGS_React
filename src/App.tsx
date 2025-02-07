@@ -276,6 +276,22 @@ function App() {
         //Is then displayed in the Main Content portion of the UI for selecting
     }
 
+    const setSearchedSong = async (track: any) => {
+        setCurrentTrack(track);
+        const uris = new Array<any>();
+        uris[0] = track.uri
+        await axios.put(
+            `https://api.spotify.com/v1/me/player/play`,
+            {
+                uris: uris,
+                device_id: deviceId,
+            },
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+    }
+
     // If no token, show login button
     if (!token) {
         return (
@@ -341,9 +357,9 @@ function App() {
                     <div>
                         <h2>Searched Tracks</h2>
                         {searchedTracks.slice(0, 5).map((track: any) => (
-                            <div key={track.id} onClick={() => setCurrentTrack(track)}>
-                                <p>{track.name} by {track.artists.map((artist: any) => artist.name).join(', ')}</p>
+                            <div key={track.id} onClick={async () => await setSearchedSong(track)} style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
                                 <img src={track.album.images[0]?.url} alt="Album Art" width={50} />
+                                <p>{track.name} by {track.artists.map((artist: any) => artist.name).join(', ')}</p>
                             </div>
                         ))}
                     </div>
