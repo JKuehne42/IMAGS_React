@@ -264,7 +264,7 @@ function App() {
         const currentSearchText = searchBoxElement ? searchBoxElement.value : '';
         console.log(currentSearchText)
 
-        axios.get(`https://api.spotify.com/v1/search?q=${currentSearchText}&type=track&limit=5`, {
+        axios.get(`https://api.spotify.com/v1/search?q=${currentSearchText}&type=track&limit=20`, {
             headers: { 
                 Authorization: `Bearer ${token}` 
             }
@@ -356,7 +356,7 @@ function App() {
                 {searchedTracks.length > 0 && (
                     <div>
                         <h2>Searched Tracks</h2>
-                        {searchedTracks.slice(0, 5).map((track: any) => (
+                        {searchedTracks.slice(0, 20).map((track: any) => (
                             <div key={track.id} onClick={async () => await setSearchedSong(track)} style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
                                 <img src={track.album.images[0]?.url} alt="Album Art" width={50} />
                                 <p>{track.name} by {track.artists.map((artist: any) => artist.name).join(', ')}</p>
