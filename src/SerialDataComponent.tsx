@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
+import './SerialData.css'; // Import the external CSS
 
 const SerialDataComponent: React.FC = () => {
     const [gsrData, setGsrData] = useState<number | null>(null);
@@ -8,6 +12,9 @@ const SerialDataComponent: React.FC = () => {
     const [port, setPort] = useState<any | null>(null);
     const [reader, setReader] = useState<any | null>(null);
     const [buffer, setBuffer] = useState<string>(''); // Buffer for accumulating chunks
+    const [gsrChartData, setGsrChartData] = useState<{ time: number; gsr: number }[]>(
+        new Array(30).fill({ time: Date.now(), gsr: 0 }) // Initialize with empty values
+    );
 
     // Function to connect to the Arduino's serial port
     const connectToSerial = async () => {
@@ -15,7 +22,7 @@ const SerialDataComponent: React.FC = () => {
             const port = await navigator.serial.requestPort();
             await port.open({ baudRate: 9600 });
             const textDecoder = new TextDecoderStream();
-            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+            port.readable.pipeTo(textDecoder.writable);
             const reader = textDecoder.readable.getReader();
             setPort(port);
             setReader(reader);
@@ -39,6 +46,13 @@ const SerialDataComponent: React.FC = () => {
                 setPulseData(jsonData.Pulse);
                 setBpmData(jsonData.BPM);
                 setHeartbeatDetected(jsonData.Heartbeat);
+
+                // Add new GSR data point for the graph
+                setGsrChartData((prevData) => {
+                    const newData = [...prevData, { time: Date.now(), gsr: jsonData.GSR }];
+                    return newData.slice(-30); // Keep only last 30 readings
+                });
+
                 console.log('Extracted JSON:', jsonData);
             } catch (error) {
                 console.error('Failed to parse JSON:', jsonString, error);
@@ -53,7 +67,7 @@ const SerialDataComponent: React.FC = () => {
         return data; // Return remaining buffer (incomplete data)
     };
 
-    // Asynchronous serial data reader using setInterval to avoid stalling the main thread
+    // Asynchronous serial data reader
     useEffect(() => {
         let intervalId: any;
 
@@ -79,7 +93,6 @@ const SerialDataComponent: React.FC = () => {
         };
 
         if (reader) {
-            // Use setInterval to repeatedly check for new data every 100ms
             intervalId = setInterval(readSerialData, 100);
         }
 
@@ -89,31 +102,54 @@ const SerialDataComponent: React.FC = () => {
     }, [reader, buffer]);
 
     return (
-        <div style={{ position: 'relative', zIndex: 10, padding: '20px' }}>
-            <button
-                onClick={connectToSerial}
-                style={{
-                    padding: '10px',
-                    margin: '20px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    zIndex: 10,
-                    position: 'relative',
-                }}
-            >
+        <div className="serial-container">
+            <button className="connect-button" onClick={connectToSerial}>
                 Connect to Arduino
             </button>
-            <div>
-                <p>GSR Data: {gsrData !== null ? gsrData : 'No data'}</p>
-                <p>Pulse Data: {pulseData !== null ? pulseData : 'No data'}</p>
-                <p>BPM: {bpmData !== null ? bpmData : 'No data'}</p>
-                <p>Heartbeat Detected: {heartbeatDetected !== null ? (heartbeatDetected ? 'Yes' : 'No') : 'No data'}</p>
+
+            <div className="serial-data-box">
+                <div className="serial-header">Real-Time Sensor Data</div>
+
+                <div className="serial-data-list">
+                    {[
+                        { label: 'GSR Data', value: gsrData, textClass: 'gsr-text' },
+                        { label: 'Pulse Data', value: pulseData, textClass: 'pulse-text' },
+                        { label: 'BPM', value: bpmData, textClass: 'bpm-text' },
+                        {
+                            label: 'Heartbeat Detected',
+                            value: heartbeatDetected !== null ? (heartbeatDetected ? 'Yes' : 'No') : null,
+                            textClass: 'heartbeat-text'
+                        }
+                    ].map(({ label, value, textClass }) => (
+                        <div key={label} className="serial-data-item">
+                            <span className="serial-label">{label}:</span>
+                            <span className={`serial-value ${textClass}`}>
+                                {value !== null ? value : 'No data'}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Real-Time GSR Graph */}
+            <div className="chart-container">
+            <h2 style={{ color: "black" }}>GSR Data Over Time</h2>
+
+                <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={gsrChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                            dataKey="time"
+                            tickFormatter={(time) => new Date(time).toLocaleTimeString()}
+                        />
+                        <YAxis domain={['auto', 'auto']} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="gsr" stroke="#8884d8" strokeWidth={2} />
+                    </LineChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );
 };
 
 export default SerialDataComponent;
-

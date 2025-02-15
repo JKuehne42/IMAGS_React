@@ -1,4 +1,4 @@
-const clientId = 'bad35e9a5e774d3584043c601889c7ec'; // Replace with your actual Spotify client ID
+const clientId = '50f7cd52f2f2430d9aa8b5afb016d21c'; // Replace with your actual Spotify client ID
 const redirectUri = 'http://localhost:5173/callback';
 const scopes = [
     'user-read-private',

@@ -1,165 +1,400 @@
-/* Global Styles */
-body, html {
+* {
   margin: 0;
   padding: 0;
-  font-family: 'Arial', sans-serif;
-  background-color: #121212;
-  color: white;
-  height: 100%;
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
-/* Spotify Layout */
-.spotify-layout {
-  display: flex;
-  flex-direction: column;
+body, html {
   height: 100vh;
-  width: 100vw; /* Ensure layout takes full width and height */
+  width: 100vw;
   overflow: hidden;
 }
 
-/* Top Bar */
-.top-bar {
+.app-container {
+  height: 100vh;
+  width: 100vw;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: black;
-  height: 60px;
-  width: 100%; /* Full width */
-  box-sizing: border-box;
+  flex-direction: column;
+  position: relative;
 }
 
-.top-left {
+/* Background */
+.background-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom right, #1DB954, #006400);
+  z-index: -2;
+}
+
+/* Header Bar */
+.header-bar {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  height: 80px;
+}
+
+.header-left {
   display: flex;
   align-items: center;
+  gap: 1rem;
 }
 
-.spotify-logo {
-  height: 40px;
-}
-
-.top-center {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  justify-content: center; /* Center home button and search bar */
-}
-
-.home-button {
-  background: none;
+.header-title {
   color: white;
-  border: none;
-  font-size: 16px;
-  margin-right: 20px;
-  cursor: pointer;
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.search-container {
+  flex: 1;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 2rem;
 }
 
 .search-bar {
-  width: 100%;
-  max-width: 600px; /* Responsive max width for search bar */
-  padding: 10px;
-  border-radius: 25px;
+  background-color: white;
   border: none;
-  outline: none;
-  font-size: 14px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  font-size: 1rem;
+  width: 100%;
 }
 
-.top-right {
-  display: flex;
-  align-items: center;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 20%; /* Responsive fixed width */
-  background-color: #2e2e2e;
-  height: calc(100vh - 60px); /* Full height minus the top bar */
-  padding: 20px;
-  box-sizing: border-box;
+.username {
   color: white;
-  position: fixed;
-  top: 60px; /* Start right below the top bar */
-  left: 0;
-  overflow-y: auto;
-}
-
-.sidebar h2 {
-  font-size: 24px;
-}
-
-.playlists ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.playlists li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.playlist-image {
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
-  border-radius: 4px;
+  font-size: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
 }
 
 /* Main Content */
 .main-content {
-  margin-left: 20%; /* Account for sidebar width */
-  padding: 20px;
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  height: calc(100vh - 140px);
+}
+
+/* Panel Styles */
+.panel {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel h2 {
+  color: #000;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+/* Library Panel */
+.library-panel {
+  flex: 1;
+  min-width: 250px;
+}
+
+.playlist-container {
   overflow-y: auto;
-  height: calc(100vh - 60px); /* Full height minus the top bar */
-  box-sizing: border-box;
-  width: 80%; /* Remaining width for content */
+  max-height: calc(100% - 3rem);
 }
 
-/* Bottom Player */
-.bottom-player {
-  position: fixed;
-  bottom: 0;
-  width: calc(100% - 20%); /* Full width minus sidebar */
-  background-color: #181818;
-  height: 100px;
+.playlist-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
-  left: 20%; /* Aligned with the main content */
-  z-index: 100; /* Make sure it's on top */
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  color: #000;
+  transition: background-color 0.2s;
+  border-radius: 4px;
 }
 
-.controls {
+.playlist-item:hover {
+  background-color: rgb(122, 213, 122);
+}
+
+.playlist-image {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 4px;
+  margin-right: 1rem;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Now Playing Panel */
+.now-playing-panel {
+  flex: 2;
+  position: relative;
+  overflow: hidden;
+}
+
+.playlist-tracks-container {
+  overflow-y: auto;
+  height: calc(100% - 60px);
+  padding: 0.5rem;
+}
+
+.playlist-track-item {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 0.5rem;
 }
 
-.queue-and-volume {
+.playlist-track-item:hover {
+  background-color: rgb(122, 213, 122);
+}
+
+.track-item-left {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  flex: 1;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    top: 0;
-  }
+.track-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  margin-right: 1rem;
+  object-fit: cover;
+}
 
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-  }
+.track-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
 
-  .bottom-player {
-    width: 100%;
-    left: 0;
-  }
+.track-title {
+  font-weight: bold;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #000;
+}
 
+.track-artist {
+  font-size: 0.8rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Album Container */
+.album-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+.album-art {
+  width:500px !important;
+  height: 500px !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.album-art.active {
+  transform: scale(1);
+}
+
+.track-info {
+  text-align: center;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.track-name {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #000;
+}
+
+.artist-name {
+  font-size: 1rem;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Now Playing Overlay */
+.now-playing-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mini-player {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mini-player-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.mini-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-track-name {
+  font-weight: bold;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-artist-name {
+  font-size: 0.8rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Control Bar */
+.control-bar {
+  background-color: #000;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+}
+
+.playback-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.control-button {
+  background-color: white;
+  color: black;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  margin: 0 0.5rem;
+}
+
+.control-button:hover {
+  background-color: #4338ca;
+  color: white;
+}
+
+.control-button.connected {
+  background-color: #4338ca;
+  color: white;
+}
+
+.real-time-panel {
+  flex: 1;
+  min-width: 250px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  min-height: 0; /* Critical for Firefox */
+  height: 100%;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Sensor Data Styles */
+.sensor-data-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sensor-text {
+  color: #000;
+  font-size: 1rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+/* Utility Classes */
+.serial-data-hidden {
+  display: none;
+}
+
+/* Progress Bar Specific Styles */
+.time-check {
+  width: 100%;
+  height: 6px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+/* Additional hover and interaction styles can be added here */
+.time-check:hover .progress-thumb {
+  opacity: 1;
 }
